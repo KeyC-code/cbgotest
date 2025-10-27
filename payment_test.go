@@ -28,7 +28,7 @@ func TestPaymentValidation(t *testing.T) {
 			currency:      "USD",
 			rate:          150,
 			allowed:       false,
-			expectedError: "over limit",
+			expectedError: "over the limit: 30000.00 RUB",
 		},
 		{
 			name:          "100 EUR, курс 150, разрешаем (ровно в лимит)",
@@ -44,7 +44,7 @@ func TestPaymentValidation(t *testing.T) {
 			currency:      "UIIAI",
 			rate:          10,
 			allowed:       false,
-			expectedError: "unknown currency",
+			expectedError: "Нет такой валюты, это мем UIIAI",
 		},
 		{
 			name:          "Отрицательная сумма (а вдруг)",
@@ -52,12 +52,19 @@ func TestPaymentValidation(t *testing.T) {
 			currency:      "USD",
 			rate:          100,
 			allowed:       false,
-			expectedError: "negative amount",
+			expectedError: "lower then 0: -10000.00 RUB",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			rates := NewRates()
+
+			if tc.rate > 0 {
+				rates.SetRate(tc.currency, tc.rate)
+			}
+
+			paymentService := NewPaymentService(rates)
 
 			request := PaymentRequest{
 				Provider: "test_provider",
@@ -65,8 +72,7 @@ func TestPaymentValidation(t *testing.T) {
 				Currency: tc.currency,
 			}
 
-			result := ProcessPayment(request)
-
+			result := paymentService.ProcessPayment(request)
 			if result.Allowed != tc.allowed {
 				t.Errorf(
 					"Ожидалось разрешение: %v, Получили: %v",
@@ -77,6 +83,21 @@ func TestPaymentValidation(t *testing.T) {
 			if tc.expectedError != "" {
 				if result.Message == "" {
 					t.Error("Должна быть ошибка, а ее нет...")
+				} else if !(len(result.Message) >= len(tc.expectedError) && result.Message[len(result.Message)-len(tc.expectedError):] == tc.expectedError) {
+					t.Errorf("Ожидали ошибку: '%s', получили: '%s'",
+						tc.expectedError, result.Message)
+				}
+			} else {
+				if result.Message == "" {
+					t.Error("Нет информационного сообщения, а хотелось бы")
+				}
+			}
+
+			if tc.rate > 0 && result.Allowed {
+				expectedAmount := tc.amount * tc.rate
+				if result.Amount != expectedAmount {
+					t.Errorf("Ожидали сумму %.2f, получили %.2f",
+						expectedAmount, result.Amount)
 				}
 			}
 

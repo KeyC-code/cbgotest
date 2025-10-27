@@ -16,7 +16,19 @@ type PaymentResponse struct { // ответ на запрос
 	Message string
 }
 
-func ProcessPayment(request PaymentRequest) PaymentResponse {
+type PaymentService struct {
+	rates *Rates
+	limit float64
+}
+
+func NewPaymentService(rates *Rates) *PaymentService {
+	return &PaymentService{
+		rates: rates,
+		limit: 15000.0,
+	}
+}
+
+func (service *PaymentService) ProcessPayment(request PaymentRequest) PaymentResponse {
 
 	if request.Currency == "UIIAI" { // Чисто для тестов
 		return PaymentResponse{
@@ -25,24 +37,20 @@ func ProcessPayment(request PaymentRequest) PaymentResponse {
 		}
 	}
 
-	rates := map[string]float64{ // Тоже чисто для тестов
-		"USD": 90,
-		"EUR": 150,
-	}
-
-	rate, exists := rates[request.Currency]
+	rate, err := service.rates.GetRate(request.Currency)
 	amount := request.Amount * rate
 
-	if !exists {
+	if err != nil {
 		return PaymentResponse{
 			Allowed: false,
-			Message: fmt.Sprintf("currency not supported: %s", request.Currency),
+			Message: err.Error(),
 		}
 	}
 
-	if amount > 15000 {
+	if amount > service.limit {
 		return PaymentResponse{
 			Allowed: false,
+			Amount:  amount,
 			Message: fmt.Sprintf("over the limit: %.2f RUB", amount),
 		}
 	}
@@ -50,11 +58,13 @@ func ProcessPayment(request PaymentRequest) PaymentResponse {
 	if amount < 0 {
 		return PaymentResponse{
 			Allowed: false,
+			Amount:  amount,
 			Message: fmt.Sprintf("lower then 0: %.2f RUB", amount),
 		}
 	}
 	return PaymentResponse{
 		Allowed: true,
+		Amount:  amount,
 		Message: "payment is allowed!",
 	}
 }
