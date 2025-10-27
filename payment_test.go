@@ -52,16 +52,39 @@ func TestPaymentValidation(t *testing.T) {
 			currency:      "USD",
 			rate:          100,
 			allowed:       false,
-			expectedError: "negatuive amount",
+			expectedError: "negative amount",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+
+			request := PaymentRequest{
+				Provider: "test_provider",
+				Amount:   tc.amount,
+				Currency: tc.currency,
+			}
+
+			result := ProcessPayment(request)
+
+			if result.Allowed != tc.allowed {
+				t.Errorf(
+					"Ожидалось разрешение: %v, Получили: %v",
+					tc.allowed, result.Allowed,
+				)
+			}
+
+			if tc.expectedError != "" {
+				if result.Message == "" {
+					t.Error("Должна быть ошибка, а ее нет...")
+				}
+			}
+
 			t.Logf("Тест: %s", tc.name)
 			t.Logf("Сумма: %.2f, курс: '%v', пропускаем?: %v, исключение:= '%s'",
 				tc.amount, tc.currency, tc.allowed, tc.expectedError)
-			t.Skip("Нет реализаци пока")
+			t.Logf("Результат: allowed=%v, message='%s'",
+				result.Allowed, result.Message)
 		})
 	}
 }
