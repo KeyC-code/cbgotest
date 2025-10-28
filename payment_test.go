@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -106,6 +107,29 @@ func TestPaymentValidation(t *testing.T) {
 				tc.amount, tc.currency, tc.allowed, tc.expectedError)
 			t.Logf("Результат: allowed=%v, message='%s'",
 				result.Allowed, result.Message)
+		})
+	}
+}
+
+func TestParallelPayment(t *testing.T) {
+	rates := NewRates()
+	service := NewPaymentService(rates)
+
+	for i := 0; i < 10; i++ {
+		t.Run(fmt.Sprintf("Параллельный тест: %d", i), func(t *testing.T) {
+			t.Parallel()
+
+			request := PaymentRequest{
+				Provider: "tes_parallel_provider",
+				Amount:   100,
+				Currency: "USD",
+			}
+
+			result := service.ProcessPayment(request)
+
+			if result.Message == "" {
+				t.Error("Нет сообщения")
+			}
 		})
 	}
 }
