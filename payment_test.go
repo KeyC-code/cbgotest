@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"mock-cbr/internal/service"
+	"mock-cbr/internal/storage"
 	"testing"
 )
 
@@ -59,15 +61,15 @@ func TestPaymentValidation(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			rates := NewRates()
+			rates := storage.NewRates()
 
 			if tc.rate > 0 {
 				rates.SetRate(tc.currency, tc.rate)
 			}
 
-			paymentService := NewPaymentService(rates)
+			paymentService := service.NewPaymentService(rates)
 
-			request := PaymentRequest{
+			request := service.PaymentRequest{
 				Provider: "test_provider",
 				Amount:   tc.amount,
 				Currency: tc.currency,
@@ -112,20 +114,20 @@ func TestPaymentValidation(t *testing.T) {
 }
 
 func TestParallelPayment(t *testing.T) {
-	rates := NewRates()
-	service := NewPaymentService(rates)
+	rates := storage.NewRates()
+	PaymentService := service.NewPaymentService(rates)
 
 	for i := 0; i < 10; i++ {
 		t.Run(fmt.Sprintf("Параллельный тест: %d", i), func(t *testing.T) {
 			t.Parallel()
 
-			request := PaymentRequest{
+			request := service.PaymentRequest{
 				Provider: "tes_parallel_provider",
 				Amount:   100,
 				Currency: "USD",
 			}
 
-			result := service.ProcessPayment(request)
+			result := PaymentService.ProcessPayment(request)
 
 			if result.Message == "" {
 				t.Error("Нет сообщения")

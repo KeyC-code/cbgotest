@@ -1,7 +1,8 @@
-package main
+package service
 
 import (
 	"fmt"
+	"mock-cbr/internal/storage"
 )
 
 type PaymentRequest struct { // запрос на оплату
@@ -17,11 +18,11 @@ type PaymentResponse struct { // ответ на запрос
 }
 
 type PaymentService struct {
-	rates *Rates
+	rates *storage.Rates
 	limit float64
 }
 
-func NewPaymentService(rates *Rates) *PaymentService {
+func NewPaymentService(rates *storage.Rates) *PaymentService {
 	return &PaymentService{
 		rates: rates,
 		limit: 15000.0,
