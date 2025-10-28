@@ -1,0 +1,67 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Mock CBR API",
+    "version": "1.0.0",
+    "description": "Мок сервиса ЦБ (XML_daily.asp) с двумя эндпоинтами. Файл можно заменить на сгенерированный `swag init`."
+  },
+  "host": "localhost:8080",
+  "basePath": "/",
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json",
+    "application/xml"
+  ],
+  "produces": [
+    "application/xml"
+  ],
+  "paths": {
+    "/scripts/XML_daily.asp": {
+      "get": {
+        "summary": "Ежедневные курсы валют",
+        "description": "Возвращает XML с курсами валют ЦБ. Параметр date_req в формате DD/MM/YYYY.",
+        "parameters": [
+          {
+            "name": "date_req",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "Дата в формате DD/MM/YYYY"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "XML с курсами валют"
+          }
+        },
+        "tags": [
+          "cbr"
+        ]
+      }
+    },
+    "/cbr": {
+      "get": {
+        "summary": "Курсы валют (сокращенный эндпоинт)",
+        "parameters": [
+          {
+            "name": "date_req",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "Дата в формате DD/MM/YYYY"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "XML с курсами валют"
+          }
+        },
+        "tags": [
+          "cbr"
+        ]
+      }
+    }
+  }
+}

@@ -6,6 +6,8 @@ import (
 	"mock-cbr/internal/handler"
 	"mock-cbr/internal/storage"
 	"net/http"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func main() {
@@ -16,6 +18,11 @@ func main() {
 	cbrHandler := handler.NewCBRHandler(ratesStorage)
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("/swagger/doc.json", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "docs/swagger.json")
+	})
+	mux.Handle("/swagger/", httpSwagger.WrapHandler)
+
 	mux.Handle("/scripts/XML_daily.asp", cbrHandler)
 	mux.Handle("/cbr", cbrHandler)
 
